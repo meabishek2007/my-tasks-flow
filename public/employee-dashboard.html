@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Task Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* CSS Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --forest-900: #051F20;
+      --forest-800: #0B2B26;
+      --forest-700: #163832;
+      --forest-600: #235347;
+      --accent-warm: #BEB69B;
+      --accent-light: #DAF1DE;
+      
+      --background: #051F20;
+      --foreground: #E8F5E9;
+      --card-bg: rgba(255, 255, 255, 0.08);
+      --card-elevated: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.15);
+      --muted: rgba(255, 255, 255, 0.6);
+      
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --emergency: #EF4444;
+      --high: #F97316;
+      
+      --radius: 16px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(135deg, #051F20 0%, #0B2B26 30%, #163832 60%, #235347 100%);
+      min-height: 100vh;
+      color: var(--foreground);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Glass Card Styles */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .glass-card-elevated {
+      background: var(--card-elevated);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      margin-bottom: 24px;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .header-left h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .header-left h1 span {
+      background: linear-gradient(135deg, #BEB69B 0%, #DAF1DE 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-left p {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-top: 4px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--foreground);
+    }
+
+    .icon-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--emergency);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(190, 182, 155, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .avatar svg {
+      width: 18px;
+      height: 18px;
+      color: var(--accent-warm);
+    }
+
+    /* Main Layout */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    @media (min-width: 1024px) {
+      .main-layout {
+        grid-template-columns: 2fr 1fr;
+      }
+    }
+
+    /* Filters */
+    .filters {
+      padding: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .filters-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    .filters-label svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .select-wrapper {
+      position: relative;
+    }
+
+    .select-wrapper select {
+      appearance: none;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 8px 36px 8px 12px;
+      color: var(--foreground);
+      font-family: inherit;
+      font-size: 0.875rem;
+      cursor: pointer;
+      min-width: 150px;
+    }
+
+    .select-wrapper select:focus {
+      outline: none;
+      border-color: var(--accent-warm);
+      box-shadow: 0 0 0 2px rgba(190, 182, 155, 0.2);
+    }
+
+    .select-wrapper::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid var(--muted);
+      pointer-events: none;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .btn-ghost:hover {
+      color: var(--foreground);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-primary {
+      background: var(--accent-warm);
+      color: var(--forest-900);
+    }
+
+    .btn-primary:hover {
+      background: #d4cba8;
+    }
+
+    /* Tasks Section */
+    .tasks-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .tasks-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .tasks-header span {
+      color: var(--muted);
+      font-size: 0.875rem;
+      font-weight: 400;
+      margin-left: 8px;
+    }
+
+    .tasks-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Task Card */
+    .task-card {
+      padding: 20px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      animation: slideUp 0.5s ease-out backwards;
+    }
+
+    .task-card:hover {
+      transform: scale(1.02);
+    }
+
+    .task-card.emergency {
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.5), 0 12px 40px rgba(0, 0, 0, 0.4);
+      animation: slideUp 0.5s ease-out backwards, pulseGlow 2s ease-in-out infinite;
+    }
+
+    .task-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .task-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .task-description {
+      color: var(--muted);
+      font-size: 0.875rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Priority Badge */
+    .priority-badge {
+      padding: 6px 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      border: 1px solid;
+    }
+
+    .priority-low {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ADE80;
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .priority-medium {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .priority-high {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--high);
+      border-color: rgba(249, 115, 22, 0.3);
+    }
+
+    .priority-emergency {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--emergency);
+      border-color: rgba(239, 68, 68, 0.3);
+      animation: pulse 2s infinite;
+    }
+
+    /* Task Details */
+    .task-deadline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .deadline-label {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .deadline-label strong {
+      color: var(--foreground);
+    }
+
+    .countdown {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .countdown svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .countdown.overdue {
+      color: var(--emergency);
+    }
+
+    .countdown.urgent {
+      color: var(--warning);
+    }
+
+    /* Progress */
+    .progress-section {
+      margin-bottom: 16px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.875rem;
+    }
+
+    .progress-header span:first-child {
+      font-weight: 500;
+    }
+
+    .progress-header span:last-child {
+      color: var(--muted);
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-warm), var(--accent-light));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .progress-slider {
+      width: 100%;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .progress-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--accent-warm);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .progress-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Status Select */
+    .status-section {
+      margin-bottom: 16px;
+    }
+
+    .status-section label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .status-select {
+      width: 100%;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 10px 16px;
+      color: var(--foreground);
+      font-family: inherit;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+
+    .status-select:focus {
+      outline: none;
+      border-color: var(--accent-warm);
+    }
+
+    /* Expanded Content */
+    .task-expanded {
+      display: none;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .task-card.expanded .task-expanded {
+      display: block;
+    }
+
+    .comment-section label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .comment-section label svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .comment-textarea {
+      width: 100%;
+      min-height: 80px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px;
+      color: var(--foreground);
+      font-family: inherit;
+      font-size: 0.875rem;
+      resize: none;
+    }
+
+    .comment-textarea::placeholder {
+      color: var(--muted);
+    }
+
+    .comment-textarea:focus {
+      outline: none;
+      border-color: var(--accent-warm);
+    }
+
+    .feedback-box {
+      margin-top: 16px;
+      padding: 12px;
+      background: rgba(190, 182, 155, 0.1);
+      border: 1px solid rgba(190, 182, 155, 0.2);
+      border-radius: 12px;
+    }
+
+    .feedback-box label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--accent-warm);
+      margin-bottom: 4px;
+    }
+
+    .feedback-box p {
+      font-size: 0.875rem;
+    }
+
+    .save-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 12px;
+      display: none;
+    }
+
+    .task-card.has-changes .save-btn {
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Sidebar Widgets */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .widget {
+      padding: 20px;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .widget-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .widget-header h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .widget-header h2 svg {
+      width: 20px;
+      height: 20px;
+      color: var(--accent-warm);
+    }
+
+    /* Performance Widget */
+    .score-circle {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .score-circle svg {
+      transform: rotate(-90deg);
+    }
+
+    .score-circle .track {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.1);
+      stroke-width: 8;
+    }
+
+    .score-circle .progress {
+      fill: none;
+      stroke: var(--accent-warm);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dasharray 1s ease;
+    }
+
+    .score-text {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .score-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .stats-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stat-row .label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    .stat-row .label svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .stat-row .value {
+      font-weight: 500;
+    }
+
+    .stat-divider {
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      margin-top: 4px;
+    }
+
+    /* Calendar Widget */
+    .calendar-sync-btns {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .calendar-sync-btns button {
+      flex: 1;
+      padding: 8px;
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: var(--foreground);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: background 0.2s;
+    }
+
+    .calendar-sync-btns button:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .calendar-sync-btns button svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .upcoming-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .upcoming-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .upcoming-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .upcoming-dot.emergency {
+      background: var(--emergency);
+      animation: pulse 2s infinite;
+    }
+
+    .upcoming-dot.high {
+      background: var(--high);
+    }
+
+    .upcoming-dot.medium {
+      background: var(--warning);
+    }
+
+    .upcoming-dot.low {
+      background: var(--success);
+    }
+
+    .upcoming-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .upcoming-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .upcoming-date {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* Notes Widget */
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .note-item {
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      position: relative;
+    }
+
+    .note-content {
+      font-size: 0.875rem;
+      white-space: pre-wrap;
+      margin-bottom: 8px;
+    }
+
+    .note-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .note-date {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .note-delete {
+      opacity: 0;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px;
+      transition: opacity 0.2s, color 0.2s;
+    }
+
+    .note-item:hover .note-delete {
+      opacity: 1;
+    }
+
+    .note-delete:hover {
+      color: var(--emergency);
+    }
+
+    .note-delete svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .add-note-form {
+      display: none;
+      margin-bottom: 16px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .add-note-form.active {
+      display: block;
+    }
+
+    .add-note-form textarea {
+      width: 100%;
+      min-height: 80px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px;
+      color: var(--foreground);
+      font-family: inherit;
+      font-size: 0.875rem;
+      resize: none;
+      margin-bottom: 8px;
+    }
+
+    .add-note-form textarea::placeholder {
+      color: var(--muted);
+    }
+
+    .add-note-form textarea:focus {
+      outline: none;
+      border-color: var(--accent-warm);
+    }
+
+    .add-note-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    /* Notification Dropdown */
+    .notification-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 320px;
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 100;
+      display: none;
+    }
+
+    .notification-dropdown.active {
+      display: block;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .notification-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    .notification-list {
+      padding: 8px;
+    }
+
+    .notification-item {
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-bottom: 4px;
+    }
+
+    .notification-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .notification-item.unread {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .notification-item.emergency {
+      border-left: 2px solid var(--emergency);
+    }
+
+    .notification-item-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .notification-item-header .icon {
+      font-size: 1rem;
+    }
+
+    .notification-item-header .title {
+      flex: 1;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .notification-item-header .unread-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-warm);
+      border-radius: 50%;
+    }
+
+    .notification-message {
+      font-size: 0.8rem;
+      color: var(--muted);
+      padding-left: 28px;
+    }
+
+    .notification-time {
+      font-size: 0.7rem;
+      color: var(--muted);
+      padding-left: 28px;
+      margin-top: 4px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.6;
+      }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4), 0 12px 40px rgba(0, 0, 0, 0.4);
+      }
+      50% {
+        box-shadow: 0 0 20px 4px rgba(239, 68, 68, 0.6), 0 12px 40px rgba(0, 0, 0, 0.4);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 16px;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .header-right {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .filters {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .select-wrapper select {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header glass-card">
+      <div class="header-left">
+        <h1>Welcome back, <span>Alex Johnson</span></h1>
+        <p id="current-date"></p>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn" title="Calendar">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </button>
+        <div style="position: relative;">
+          <button class="icon-btn" id="notification-btn" title="Notifications">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="notification-badge" id="notification-count">2</span>
+          </button>
+          <div class="notification-dropdown glass-card-elevated" id="notification-dropdown">
+            <div class="notification-header">Notifications</div>
+            <div class="notification-list" id="notification-list"></div>
+          </div>
+        </div>
+        <div class="avatar">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+      <!-- Left Column - Tasks -->
+      <div class="tasks-column">
+        <!-- Filters -->
+        <div class="filters glass-card">
+          <div class="filters-label">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            <span>Filters</span>
+          </div>
+          <div class="select-wrapper">
+            <select id="priority-filter">
+              <option value="all">All Priorities</option>
+              <option value="emergency">🚨 Emergency</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div class="select-wrapper">
+            <select id="status-filter">
+              <option value="all">All Statuses</option>
+              <option value="not-started">Not Started</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost" id="clear-filters" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            Clear
+          </button>
+        </div>
+
+        <!-- Tasks Header -->
+        <div class="tasks-header">
+          <h2>My Tasks <span id="task-count">(0)</span></h2>
+        </div>
+
+        <!-- Tasks Grid -->
+        <div class="tasks-grid" id="tasks-grid"></div>
+      </div>
+
+      <!-- Right Column - Sidebar -->
+      <div class="sidebar">
+        <!-- Performance Widget -->
+        <div class="widget glass-card">
+          <div class="widget-header">
+            <h2>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                <path d="M4 22h16"></path>
+                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+              </svg>
+              My Performance
+            </h2>
+          </div>
+          <div class="score-circle" style="position: relative;">
+            <svg width="128" height="128" viewBox="0 0 128 128">
+              <circle class="track" cx="64" cy="64" r="56"></circle>
+              <circle class="progress" cx="64" cy="64" r="56" id="score-progress"></circle>
+            </svg>
+            <div class="score-text" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <span class="score-value" id="score-value">92</span>
+              <span class="score-label">Score</span>
+            </div>
+          </div>
+          <div class="stats-list">
+            <div class="stat-row">
+              <span class="label">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#22C55E" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                Completed
+              </span>
+              <span class="value" id="completed-count">24/30</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="completion-bar" style="width: 80%;"></div>
+            </div>
+            <div class="stat-row">
+              <span class="label">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#F59E0B" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                On Time
+              </span>
+              <span class="value" id="ontime-count">22</span>
+            </div>
+            <div class="stat-row">
+              <span class="label">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#EF4444" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                Late
+              </span>
+              <span class="value" id="late-count">2</span>
+            </div>
+            <div class="stat-row stat-divider">
+              <span class="label">On-Time Rate</span>
+              <span class="value" style="color: #22C55E;" id="ontime-rate">92%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calendar Widget -->
+        <div class="widget glass-card">
+          <div class="widget-header">
+            <h2>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              Upcoming Deadlines
+            </h2>
+          </div>
+          <div class="calendar-sync-btns">
+            <button onclick="syncCalendar('google')">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+              Google
+            </button>
+            <button onclick="syncCalendar('outlook')">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+              Outlook
+            </button>
+          </div>
+          <div class="upcoming-list" id="upcoming-list"></div>
+        </div>
+
+        <!-- Personal Notes Widget -->
+        <div class="widget glass-card">
+          <div class="widget-header">
+            <h2>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z"></path>
+                <path d="M15 3v6h6"></path>
+              </svg>
+              Personal Notes
+            </h2>
+            <button class="icon-btn" id="add-note-btn" style="width: 32px; height: 32px;">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="add-note-form" id="add-note-form">
+            <textarea id="new-note-input" placeholder="Write a private note..."></textarea>
+            <div class="add-note-btns">
+              <button class="btn btn-primary" onclick="saveNote()">Save Note</button>
+              <button class="btn btn-ghost" onclick="cancelNote()">Cancel</button>
+            </div>
+          </div>
+          <div class="notes-list" id="notes-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== DATA ====================
+    const now = new Date();
+    const addHours = (hours) => new Date(now.getTime() + hours * 60 * 60 * 1000);
+    const addDays = (days) => new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+    let tasks = [
+      {
+        id: '1',
+        title: 'Complete Q4 Financial Report',
+        description: 'Prepare and submit the quarterly financial analysis report with all supporting documentation.',
+        priority: 'emergency',
+        deadline: addHours(3),
+        status: 'in-progress',
+        progress: 75,
+        comments: 'Working on final charts and graphs. Need CFO approval.',
+        feedback: null,
+      },
+      {
+        id: '2',
+        title: 'Review Marketing Campaign',
+        description: 'Analyze the performance metrics of the recent marketing campaign and provide recommendations.',
+        priority: 'high',
+        deadline: addHours(18),
+        status: 'in-progress',
+        progress: 40,
+        comments: '',
+        feedback: null,
+      },
+      {
+        id: '3',
+        title: 'Update Employee Handbook',
+        description: 'Review and update the employee handbook with new company policies and procedures.',
+        priority: 'medium',
+        deadline: addDays(3),
+        status: 'not-started',
+        progress: 0,
+        comments: '',
+        feedback: null,
+      },
+      {
+        id: '4',
+        title: 'Team Meeting Preparation',
+        description: 'Prepare presentation slides and agenda for the weekly team sync meeting.',
+        priority: 'low',
+        deadline: addDays(7),
+        status: 'not-started',
+        progress: 0,
+        comments: '',
+        feedback: null,
+      },
+      {
+        id: '5',
+        title: 'Client Proposal Draft',
+        description: 'Draft the initial proposal for the new client project including timeline and budget.',
+        priority: 'high',
+        deadline: addDays(2),
+        status: 'in-progress',
+        progress: 60,
+        comments: 'Waiting for budget confirmation from finance team.',
+        feedback: 'Good progress, please ensure to include risk assessment section.',
+      },
+      {
+        id: '6',
+        title: 'System Security Audit',
+        description: 'Conduct a comprehensive security audit of the internal systems.',
+        priority: 'emergency',
+        deadline: addHours(6),
+        status: 'in-progress',
+        progress: 85,
+        comments: 'Final review of vulnerability scan results in progress.',
+        feedback: null,
+      },
+    ];
+
+    let notifications = [
+      {
+        id: '1',
+        type: 'emergency',
+        title: 'Emergency Task Assigned',
+        message: 'System Security Audit requires immediate attention.',
+        read: false,
+        createdAt: addHours(-1),
+      },
+      {
+        id: '2',
+        type: 'deadline-approaching',
+        title: 'Deadline in 3 Hours',
+        message: 'Q4 Financial Report is due soon.',
+        read: false,
+        createdAt: addHours(-2),
+      },
+      {
+        id: '3',
+        type: 'priority-update',
+        title: 'Priority Changed',
+        message: 'Client Proposal Draft priority increased to High.',
+        read: true,
+        createdAt: addDays(-1),
+      },
+      {
+        id: '4',
+        type: 'new-task',
+        title: 'New Task Assigned',
+        message: 'You have been assigned: Team Meeting Preparation.',
+        read: true,
+        createdAt: addDays(-1),
+      },
+    ];
+
+    let notes = [
+      {
+        id: '1',
+        content: 'Remember to follow up with the finance team about Q4 budget allocations.',
+        createdAt: addDays(-2),
+      },
+      {
+        id: '2',
+        content: 'Meeting notes: Discussed new project timeline with stakeholders. Key milestones set for end of month.',
+        createdAt: addDays(-1),
+      },
+    ];
+
+    const performance = {
+      completedTasks: 24,
+      totalTasks: 30,
+      onTimeCompletions: 22,
+      lateCompletions: 2,
+      score: 92,
+    };
+
+    // ==================== UTILITIES ====================
+    function formatDate(date) {
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    }
+
+    function formatDateTime(date) {
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    }
+
+    function formatTime(date) {
+      return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    }
+
+    function getRelativeTime(date) {
+      const now = new Date();
+      const diff = now - date;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      return `${days}d ago`;
+    }
+
+    function getDateLabel(date) {
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      if (date.toDateString() === today.toDateString()) return 'Today';
+      if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+
+    function getNotificationIcon(type) {
+      switch (type) {
+        case 'emergency': return '🚨';
+        case 'deadline-approaching': return '⏰';
+        case 'priority-update': return '📌';
+        case 'new-task': return '📋';
+        default: return '📢';
+      }
+    }
+
+    // ==================== COUNTDOWN ====================
+    function calculateCountdown(deadline) {
+      const now = new Date().getTime();
+      const target = new Date(deadline).getTime();
+      const diff = target - now;
+
+      const isOverdue = diff < 0;
+      const absDiff = Math.abs(diff);
+
+      const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((absDiff % (1000 * 60)) / 1000);
+      const isUrgent = !isOverdue && diff < 24 * 60 * 60 * 1000;
+
+      return { days, hours, minutes, seconds, isOverdue, isUrgent };
+    }
+
+    function formatCountdown(countdown) {
+      const pad = (n) => n.toString().padStart(2, '0');
+      let str = '';
+      if (countdown.isOverdue) str += '-';
+      if (countdown.days > 0) str += `${countdown.days}d `;
+      str += `${pad(countdown.hours)}:${pad(countdown.minutes)}:${pad(countdown.seconds)}`;
+      return str;
+    }
+
+    // ==================== RENDER FUNCTIONS ====================
+    function renderTasks() {
+      const grid = document.getElementById('tasks-grid');
+      const priorityFilter = document.getElementById('priority-filter').value;
+      const statusFilter = document.getElementById('status-filter').value;
+
+      const priorityOrder = { emergency: 0, high: 1, medium: 2, low: 3 };
+
+      let filtered = tasks.filter(task => {
+        const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
+        const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
+        return matchesPriority && matchesStatus;
+      });
+
+      filtered.sort((a, b) => {
+        const pDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+        if (pDiff !== 0) return pDiff;
+        return new Date(a.deadline) - new Date(b.deadline);
+      });
+
+      document.getElementById('task-count').textContent = `(${filtered.length})`;
+      document.getElementById('clear-filters').style.display = 
+        (priorityFilter !== 'all' || statusFilter !== 'all') ? 'flex' : 'none';
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="glass-card" style="padding: 32px; text-align: center; color: var(--muted);">No tasks match your current filters.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map((task, i) => `
+        <div class="task-card glass-card-elevated ${task.priority === 'emergency' ? 'emergency' : ''}" 
+             data-id="${task.id}" 
+             style="animation-delay: ${i * 0.1}s"
+             onclick="toggleTaskExpand('${task.id}')">
+          <div class="task-header">
+            <div>
+              <h3 class="task-title">${task.title}</h3>
+              <p class="task-description">${task.description}</p>
+            </div>
+            <span class="priority-badge priority-${task.priority}">
+              ${task.priority === 'emergency' ? '🚨 ' : ''}${task.priority}
+            </span>
+          </div>
+          <div class="task-deadline">
+            <span class="deadline-label"><strong>Deadline:</strong> ${formatDateTime(task.deadline)}</span>
+            <div class="countdown" id="countdown-${task.id}"></div>
+          </div>
+          <div class="progress-section" onclick="event.stopPropagation()">
+            <div class="progress-header">
+              <span>Progress</span>
+              <span id="progress-label-${task.id}">${task.progress}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progress-bar-${task.id}" style="width: ${task.progress}%"></div>
+            </div>
+            <input type="range" class="progress-slider" min="0" max="100" step="5" 
+                   value="${task.progress}" 
+                   onchange="updateProgress('${task.id}', this.value)"
+                   oninput="document.getElementById('progress-label-${task.id}').textContent = this.value + '%'; document.getElementById('progress-bar-${task.id}').style.width = this.value + '%'">
+          </div>
+          <div class="status-section" onclick="event.stopPropagation()">
+            <label>Status</label>
+            <select class="status-select" onchange="updateStatus('${task.id}', this.value)">
+              <option value="not-started" ${task.status === 'not-started' ? 'selected' : ''}>⏸ Not Started</option>
+              <option value="in-progress" ${task.status === 'in-progress' ? 'selected' : ''}>▶ In Progress</option>
+              <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>✓ Completed</option>
+            </select>
+          </div>
+          <div class="task-expanded" onclick="event.stopPropagation()">
+            <div class="comment-section">
+              <label>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Your Comments
+              </label>
+              <textarea class="comment-textarea" 
+                        placeholder="Add notes or updates about this task..."
+                        oninput="markHasChanges('${task.id}')"
+                        id="comment-${task.id}">${task.comments}</textarea>
+            </div>
+            ${task.feedback ? `
+              <div class="feedback-box">
+                <label>Feedback from Chair</label>
+                <p>${task.feedback}</p>
+              </div>
+            ` : ''}
+            <button class="btn btn-primary save-btn" onclick="saveTask('${task.id}')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              Save Changes
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      updateCountdowns();
+    }
+
+    function renderNotifications() {
+      const list = document.getElementById('notification-list');
+      const unread = notifications.filter(n => !n.read).length;
+      document.getElementById('notification-count').textContent = unread;
+      document.getElementById('notification-count').style.display = unread > 0 ? 'flex' : 'none';
+
+      list.innerHTML = notifications.map(n => `
+        <div class="notification-item ${!n.read ? 'unread' : ''} ${n.type === 'emergency' ? 'emergency' : ''}"
+             onclick="markNotificationRead('${n.id}')">
+          <div class="notification-item-header">
+            <span class="icon">${getNotificationIcon(n.type)}</span>
+            <span class="title">${n.title}</span>
+            ${!n.read ? '<span class="unread-dot"></span>' : ''}
+          </div>
+          <p class="notification-message">${n.message}</p>
+          <span class="notification-time">${getRelativeTime(n.createdAt)}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderUpcoming() {
+      const list = document.getElementById('upcoming-list');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const nextWeek = new Date(today);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+
+      const upcoming = tasks
+        .filter(t => {
+          const d = new Date(t.deadline);
+          return d >= today && d <= nextWeek;
+        })
+        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
+      if (upcoming.length === 0) {
+        list.innerHTML = '<p class="empty-state">No upcoming deadlines this week.</p>';
+        return;
+      }
+
+      list.innerHTML = upcoming.map(t => `
+        <div class="upcoming-item">
+          <div class="upcoming-dot ${t.priority}"></div>
+          <div class="upcoming-info">
+            <p class="upcoming-title">${t.title}</p>
+            <p class="upcoming-date">${getDateLabel(t.deadline)} • ${formatTime(t.deadline)}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderNotes() {
+      const list = document.getElementById('notes-list');
+
+      if (notes.length === 0) {
+        list.innerHTML = '<p class="empty-state">No notes yet. Click + to add one.</p>';
+        return;
+      }
+
+      list.innerHTML = notes.map(n => `
+        <div class="note-item">
+          <p class="note-content">${n.content}</p>
+          <div class="note-footer">
+            <span class="note-date">${formatDateTime(n.createdAt)}</span>
+            <button class="note-delete" onclick="deleteNote('${n.id}')">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPerformance() {
+      const circumference = 2 * Math.PI * 56;
+      const offset = circumference - (performance.score / 100) * circumference;
+      document.getElementById('score-progress').style.strokeDasharray = `${circumference - offset} ${circumference}`;
+      document.getElementById('score-value').textContent = performance.score;
+      document.getElementById('completed-count').textContent = `${performance.completedTasks}/${performance.totalTasks}`;
+      document.getElementById('completion-bar').style.width = `${(performance.completedTasks / performance.totalTasks) * 100}%`;
+      document.getElementById('ontime-count').textContent = performance.onTimeCompletions;
+      document.getElementById('late-count').textContent = performance.lateCompletions;
+      document.getElementById('ontime-rate').textContent = `${Math.round((performance.onTimeCompletions / performance.completedTasks) * 100)}%`;
+    }
+
+    // ==================== EVENT HANDLERS ====================
+    function toggleTaskExpand(id) {
+      const card = document.querySelector(`.task-card[data-id="${id}"]`);
+      document.querySelectorAll('.task-card.expanded').forEach(c => {
+        if (c !== card) c.classList.remove('expanded');
+      });
+      card.classList.toggle('expanded');
+    }
+
+    function markHasChanges(id) {
+      document.querySelector(`.task-card[data-id="${id}"]`).classList.add('has-changes');
+    }
+
+    function updateProgress(id, value) {
+      markHasChanges(id);
+    }
+
+    function updateStatus(id, status) {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        task.status = status;
+        showToast('Status updated');
+      }
+    }
+
+    function saveTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        const slider = document.querySelector(`.task-card[data-id="${id}"] .progress-slider`);
+        const comment = document.getElementById(`comment-${id}`);
+        task.progress = parseInt(slider.value);
+        task.comments = comment.value;
+        document.querySelector(`.task-card[data-id="${id}"]`).classList.remove('has-changes');
+        showToast('Task updated successfully');
+      }
+    }
+
+    function markNotificationRead(id) {
+      const n = notifications.find(n => n.id === id);
+      if (n) {
+        n.read = true;
+        renderNotifications();
+      }
+    }
+
+    function saveNote() {
+      const input = document.getElementById('new-note-input');
+      const content = input.value.trim();
+      if (content) {
+        notes.unshift({
+          id: Date.now().toString(),
+          content,
+          createdAt: new Date(),
+        });
+        input.value = '';
+        document.getElementById('add-note-form').classList.remove('active');
+        renderNotes();
+        showToast('Note added');
+      }
+    }
+
+    function cancelNote() {
+      document.getElementById('new-note-input').value = '';
+      document.getElementById('add-note-form').classList.remove('active');
+    }
+
+    function deleteNote(id) {
+      notes = notes.filter(n => n.id !== id);
+      renderNotes();
+      showToast('Note deleted');
+    }
+
+    function syncCalendar(provider) {
+      showToast(`Syncing with ${provider.charAt(0).toUpperCase() + provider.slice(1)}...`);
+    }
+
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--card-elevated);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border);
+        padding: 12px 20px;
+        border-radius: 12px;
+        color: var(--foreground);
+        font-size: 0.875rem;
+        z-index: 1000;
+        animation: fadeIn 0.3s ease-out;
+      `;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    // ==================== COUNTDOWNS ====================
+    function updateCountdowns() {
+      tasks.forEach(task => {
+        const el = document.getElementById(`countdown-${task.id}`);
+        if (el) {
+          const countdown = calculateCountdown(task.deadline);
+          el.textContent = formatCountdown(countdown);
+          el.className = 'countdown';
+          if (countdown.isOverdue) {
+            el.classList.add('overdue');
+            el.textContent += ' (Overdue)';
+          } else if (countdown.isUrgent) {
+            el.classList.add('urgent');
+            el.textContent += ' (Urgent)';
+          }
+          el.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              ${countdown.isOverdue ? 
+                '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>' :
+                '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>'
+              }
+            </svg>
+            ${formatCountdown(countdown)}${countdown.isOverdue ? ' (Overdue)' : countdown.isUrgent ? ' (Urgent)' : ''}
+          `;
+        }
+      });
+    }
+
+    // ==================== INITIALIZATION ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set current date
+      document.getElementById('current-date').textContent = formatDate(new Date());
+
+      // Render all components
+      renderTasks();
+      renderNotifications();
+      renderUpcoming();
+      renderNotes();
+      renderPerformance();
+
+      // Update countdowns every second
+      setInterval(updateCountdowns, 1000);
+
+      // Filter event listeners
+      document.getElementById('priority-filter').addEventListener('change', renderTasks);
+      document.getElementById('status-filter').addEventListener('change', renderTasks);
+      document.getElementById('clear-filters').addEventListener('click', () => {
+        document.getElementById('priority-filter').value = 'all';
+        document.getElementById('status-filter').value = 'all';
+        renderTasks();
+      });
+
+      // Notification dropdown toggle
+      document.getElementById('notification-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('notification-dropdown').classList.toggle('active');
+      });
+
+      document.addEventListener('click', () => {
+        document.getElementById('notification-dropdown').classList.remove('active');
+      });
+
+      // Add note toggle
+      document.getElementById('add-note-btn').addEventListener('click', () => {
+        document.getElementById('add-note-form').classList.toggle('active');
+        document.getElementById('new-note-input').focus();
+      });
+    });
+  </script>
+</body>
+</html>
